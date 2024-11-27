@@ -1,9 +1,9 @@
 <?php
-$servername = getenv('MYSQLHOST');
-$username = getenv('MYSQLUSER');
-$password = getenv('MYSQLPASSWORD');
-$dbname = getenv('MYSQLDATABASE');
-$port = getenv('MYSQLPORT');
+$servername = "junction.proxy.rlwy.net";
+$username = "root";
+$password = "UAXATIKXNutukAOSqYCxSYGQfxwOLtAR";
+$dbname = "railway";
+$port = 13081;
 
 try {
     $dsn = "mysql:host=$servername;dbname=$dbname;port=$port";
