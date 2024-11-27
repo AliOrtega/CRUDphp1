@@ -1,9 +1,9 @@
 <?php
-$servername = "junction.proxy.rlwy.net";
-$username = "root";
-$password = "UAXATIKXNutukAOSqYCxSYGQfxwOLtAR";
-$dbname = "railway";
-$port = 13081;
+$servername = getenv('MYSQLHOST');
+$username = getenv('MYSQLUSER');
+$password = getenv('MYSQLPASSWORD');
+$dbname = getenv('MYSQLDATABASE');
+$port = getenv('MYSQLPORT');
 
 try {
     $dsn = "mysql:host=$servername;dbname=$dbname;port=$port";
@@ -14,7 +14,6 @@ try {
     );
 
     $conn = new PDO($dsn, $username, $password, $options);
-    echo "Conectado exitosamente";
 } catch (PDOException $e) {
     die("Conexión fallida: " . $e->getMessage());
 }
