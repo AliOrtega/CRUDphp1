@@ -4,7 +4,7 @@ include 'config.php';
 session_start(); // Asegúrate de iniciar la sesión
 
 if(isset($_POST['submit'])){
-    // Sanitize input data
+    // Sanitizar datos de entrada
     $name = htmlspecialchars($_POST['name']);
     $email = htmlspecialchars($_POST['email']);
     $pass = md5($_POST['password']);
@@ -18,7 +18,7 @@ if(isset($_POST['submit'])){
     if (!in_array($image_type, $allowed_types)) {
         $message[] = 'Tipo de imagen no válido. Solo se permiten JPEG y PNG.';
     } else {
-        // Check if user already exists
+        // Verificar si el usuario ya existe
         try {
             $stmt = $conn->prepare("SELECT * FROM `user_form` WHERE email = :email AND password = :password");
             $stmt->execute([':email' => $email, ':password' => $pass]);
@@ -28,7 +28,7 @@ if(isset($_POST['submit'])){
                 if($pass != $cpass){
                     $message[] = '¡Las contraseñas no coinciden!';
                 } else {
-                    // Insert new user
+                    // Insertar nuevo usuario
                     $stmt = $conn->prepare("INSERT INTO `user_form` (name, email, password, image) VALUES (:name, :email, :password, :image)");
                     $stmt->bindParam(':name', $name);
                     $stmt->bindParam(':email', $email);
