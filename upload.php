@@ -8,9 +8,14 @@ if (isset($_POST['submit'])) {
     $image_folder = 'uploaded_img/'.$image;
 
     if (move_uploaded_file($image_temp, $image_folder)) {
-        $query = "INSERT INTO `images` (image) VALUES ('$image')";
-        mysqli_query($conn, $query) or die('query failed');
-        header('location:index.php');
+        try {
+            $stmt = $conn->prepare("INSERT INTO `images` (image) VALUES (:image)");
+            $stmt->execute(['image' => $image]);
+            header('Location: gallery.php');
+            exit();
+        } catch (PDOException $e) {
+            die('Query failed: ' . $e->getMessage());
+        }
     } else {
         echo 'Error al subir la imagen.';
     }
