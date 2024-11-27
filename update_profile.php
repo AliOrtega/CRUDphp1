@@ -20,42 +20,35 @@ if (isset($_POST['update_profile'])) {
 
         if (!empty($update_pass) || !empty($new_pass) || !empty($confirm_pass)) {
             if ($update_pass != $old_pass) {
-                $message[] = 'old password not matched!';
+                $message[] = '¡La contraseña anterior no coincide!';
             } elseif ($new_pass != $confirm_pass) {
-                $message[] = 'confirm password not matched!';
+                $message[] = '¡La confirmación de la contraseña no coincide!';
             } else {
                 $stmt = $conn->prepare("UPDATE `user_form` SET password = :password WHERE id = :id");
                 $stmt->execute(['password' => $confirm_pass, 'id' => $user_id]);
-                $message[] = 'password updated successfully!';
+                $message[] = '¡Contraseña actualizada con éxito!';
             }
         }
 
         // Manejo de imagen
-        $update_image = $_FILES['update_image']['name'];
-        $update_image_size = $_FILES['update_image']['size'];
-        $update_image_tmp_name = $_FILES['update_image']['tmp_name'];
-        $update_image_folder = 'uploaded_img/'.$update_image;
-
-        // Crear el directorio si no existe con permisos correctos
-        if (!is_dir('uploaded_img')) {
-            mkdir('uploaded_img', 0755, true);
-        }
-
-        if (!empty($update_image)) {
+        if (isset($_FILES['update_image']['tmp_name']) && $_FILES['update_image']['tmp_name']) {
+            $update_image_data = file_get_contents($_FILES['update_image']['tmp_name']);
+            $update_image_type = mime_content_type($_FILES['update_image']['tmp_name']);
+            
             if ($update_image_size > 2000000) {
-                $message[] = 'image is too large';
+                $message[] = '¡La imagen es demasiado grande!';
             } else {
-                if (move_uploaded_file($update_image_tmp_name, $update_image_folder)) {
-                    $stmt = $conn->prepare("UPDATE `user_form` SET image = :image WHERE id = :id");
-                    $stmt->execute(['image' => $update_image, 'id' => $user_id]);
-                    $message[] = 'image updated successfully!';
-                } else {
-                    $message[] = 'Failed to upload image!';
-                }
+                $stmt = $conn->prepare("UPDATE `user_form` SET image = :image, mime_type = :mime_type WHERE id = :id");
+                $stmt->bindParam(':image', $update_image_data, PDO::PARAM_LOB);
+                $stmt->bindParam(':mime_type', $update_image_type);
+                $stmt->bindParam(':id', $user_id);
+                $stmt->execute();
+                $message[] = '¡Imagen actualizada con éxito!';
             }
         }
+
     } catch (PDOException $e) {
-        die('Query failed: ' . $e->getMessage());
+        die('Error en la consulta: ' . $e->getMessage());
     }
 }
 ?>
@@ -66,7 +59,7 @@ if (isset($_POST['update_profile'])) {
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Update Profile</title>
+    <title>Actualizar Perfil</title>
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
@@ -78,20 +71,20 @@ if (isset($_POST['update_profile'])) {
             $stmt->execute(['id' => $user_id]);
             $fetch = $stmt->fetch(PDO::FETCH_ASSOC);
         } catch (PDOException $e) {
-            die('Query failed: ' . $e->getMessage());
+            die('Error en la consulta: ' . $e->getMessage());
         }
     ?>
 
     <form action="" method="post" enctype="multipart/form-data">
         <?php
-            if ($fetch['image'] == '') {
+            if (empty($fetch['image'])) {
                 echo '<img src="images/default-avatar.png">';
             } else {
-                echo '<img src="uploaded_img/'.$fetch['image'].'">';
+                echo '<img src="data:' . htmlspecialchars($fetch['mime_type']) . ';base64,' . base64_encode($fetch['image']) . '" alt="Imagen de perfil">';
             }
             if (isset($message)) {
                 foreach ($message as $msg) {
-                    echo '<div class="message">'.$msg.'</div>';
+                    echo '<div class="message">' . htmlspecialchars($msg) . '</div>';
                 }
             }
         ?>
@@ -105,16 +98,16 @@ if (isset($_POST['update_profile'])) {
                 <input type="file" name="update_image" accept="image/jpg, image/jpeg, image/png" class="box">
             </div>
             <div class="inputBox">
-                <input type="hidden" name="old_pass" value="<?php echo $fetch['password']; ?>">
+                <input type="hidden" name="old_pass" value="<?php echo htmlspecialchars($fetch['password']); ?>">
                 <span>Contraseña anterior :</span>
-                <input type="password" name="update_pass" placeholder="enter previous password" class="box">
+                <input type="password" name="update_pass" placeholder="Introduce la contraseña anterior" class="box">
                 <span>Nueva contraseña :</span>
-                <input type="password" name="new_pass" placeholder="enter new password" class="box">
+                <input type="password" name="new_pass" placeholder="Introduce la nueva contraseña" class="box">
                 <span>Confirma la nueva contraseña :</span>
-                <input type="password" name="confirm_pass" placeholder="confirm new password" class="box">
+                <input type="password" name="confirm_pass" placeholder="Confirma la nueva contraseña" class="box">
             </div>
         </div>
-        <input type="submit" value="update profile" name="update_profile" class="btn">
+        <input type="submit" value="Actualizar perfil" name="update_profile" class="btn">
         <a href="home.php" class="delete-btn">Regresar</a>
     </form>
 </div>
