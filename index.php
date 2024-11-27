@@ -3,7 +3,13 @@ include 'config.php';
 session_start();
 
 // Consulta para obtener todas las imágenes
-$images = mysqli_query($conn, "SELECT * FROM `images`") or die('query failed');
+try {
+    $stmt = $conn->prepare("SELECT * FROM `images`");
+    $stmt->execute();
+    $images = $stmt->fetchAll();
+} catch (PDOException $e) {
+    die('Query failed: ' . $e->getMessage());
+}
 ?>
 
 <!DOCTYPE html>
@@ -18,18 +24,16 @@ $images = mysqli_query($conn, "SELECT * FROM `images`") or die('query failed');
 <body>
     <h1>Mi galería de imágenes</h1>
 
-    
     <form action="upload.php" method="post" enctype="multipart/form-data">
         <input type="file" name="image" required>
         <input type="submit" name="submit" value="Subir Imagen">
         <a href="home.php" class="btn">Regresar al Perfil</a>
     </form>
 
-    
     <div class="gallery">
         <?php
-        if (mysqli_num_rows($images) > 0) {
-            while ($row = mysqli_fetch_assoc($images)) {
+        if (count($images) > 0) {
+            foreach ($images as $row) {
                 echo '<div class="image">';
                 echo '<img src="uploaded_img/'.$row['image'].'" alt="Imagen">';
                 echo '<p>'.$row['image'].'</p>';
