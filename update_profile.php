@@ -4,8 +4,8 @@ session_start();
 $user_id = $_SESSION['user_id'];
 
 if (isset($_POST['update_profile'])) {
-    $update_name = htmlspecialchars($_POST['update_name']);
-    $update_email = htmlspecialchars($_POST['update_email']);
+    $update_name = htmlspecialchars($_POST['update_name'] ?? '');
+    $update_email = htmlspecialchars($_POST['update_email'] ?? '');
 
     try {
         // Actualizar nombre y email
@@ -81,8 +81,8 @@ if (isset($_POST['update_profile'])) {
             if (empty($fetch['image'])) {
                 echo '<img src="images/default-avatar.png">';
             } else {
-                $mime_type = isset($fetch['mime_type']) ? htmlspecialchars($fetch['mime_type']) : 'image/jpeg';
-                $image = isset($fetch['image']) ? base64_encode($fetch['image']) : '';
+                $mime_type = htmlspecialchars($fetch['mime_type'] ?? 'image/jpeg');
+                $image = base64_encode($fetch['image'] ?? '');
                 echo '<img src="data:' . $mime_type . ';base64,' . $image . '" alt="Imagen de perfil">';
             }
             if (isset($message)) {
@@ -94,14 +94,14 @@ if (isset($_POST['update_profile'])) {
         <div class="flex">
             <div class="inputBox">
                 <span>Nombre de usuario :</span>
-                <input type="text" name="update_name" value="<?php echo htmlspecialchars(isset($fetch['name']) ? $fetch['name'] : ''); ?>" class="box">
+                <input type="text" name="update_name" value="<?php echo htmlspecialchars($fetch['name'] ?? ''); ?>" class="box">
                 <span>Email :</span>
-                <input type="email" name="update_email" value="<?php echo htmlspecialchars(isset($fetch['email']) ? $fetch['email'] : ''); ?>" class="box">
+                <input type="email" name="update_email" value="<?php echo htmlspecialchars($fetch['email'] ?? ''); ?>" class="box">
                 <span>Actualiza tu foto de perfil :</span>
                 <input type="file" name="update_image" accept="image/jpg, image/jpeg, image/png" class="box">
             </div>
             <div class="inputBox">
-                <input type="hidden" name="old_pass" value="<?php echo htmlspecialchars(isset($fetch['password']) ? $fetch['password'] : ''); ?>">
+                <input type="hidden" name="old_pass" value="<?php echo htmlspecialchars($fetch['password'] ?? ''); ?>">
                 <span>Contraseña anterior :</span>
                 <input type="password" name="update_pass" placeholder="Introduce la contraseña anterior" class="box">
                 <span>Nueva contraseña :</span>
