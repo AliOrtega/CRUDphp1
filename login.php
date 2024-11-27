@@ -4,20 +4,26 @@ include 'config.php';
 session_start();
 
 if(isset($_POST['submit'])){
+    // Sanitize input data
+    $email = htmlspecialchars($_POST['email']);
+    $pass = md5($_POST['password']);
 
-   $email = mysqli_real_escape_string($conn, $_POST['email']);
-   $pass = mysqli_real_escape_string($conn, md5($_POST['password']));
+    // Prepare and execute the query using PDO
+    try {
+        $stmt = $conn->prepare("SELECT * FROM `user_form` WHERE email = :email AND password = :password");
+        $stmt->execute(['email' => $email, 'password' => $pass]);
 
-   $select = mysqli_query($conn, "SELECT * FROM `user_form` WHERE email = '$email' AND password = '$pass'") or die('query failed');
-
-   if(mysqli_num_rows($select) > 0){
-      $row = mysqli_fetch_assoc($select);
-      $_SESSION['user_id'] = $row['id'];
-      header('location:home.php');
-   }else{
-      $message[] = 'incorrect email or password!';
-   }
-
+        if($stmt->rowCount() > 0){
+            $row = $stmt->fetch(PDO::FETCH_ASSOC);
+            $_SESSION['user_id'] = $row['id'];
+            header('Location: home.php');
+            exit();
+        } else {
+            $message[] = 'incorrect email or password!';
+        }
+    } catch (PDOException $e) {
+        die('Query failed: ' . $e->getMessage());
+    }
 }
 
 ?>
@@ -29,10 +35,7 @@ if(isset($_POST['submit'])){
    <meta http-equiv="X-UA-Compatible" content="IE=edge">
    <meta name="viewport" content="width=device-width, initial-scale=1.0">
    <title>login</title>
-
-
    <link rel="stylesheet" href="css/style.css">
-
 </head>
 <body>
    
@@ -42,8 +45,8 @@ if(isset($_POST['submit'])){
       <h3>Ingresar</h3>
       <?php
       if(isset($message)){
-         foreach($message as $message){
-            echo '<div class="message">'.$message.'</div>';
+         foreach($message as $msg){
+            echo '<div class="message">'.$msg.'</div>';
          }
       }
       ?>
