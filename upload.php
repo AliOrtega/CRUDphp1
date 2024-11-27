@@ -7,6 +7,11 @@ if (isset($_POST['submit'])) {
     $image_temp = $_FILES['image']['tmp_name'];
     $image_folder = 'uploaded_img/'.$image;
 
+    // Crear el directorio si no existe
+    if (!is_dir('uploaded_img')) {
+        mkdir('uploaded_img', 0755, true);
+    }
+
     if (move_uploaded_file($image_temp, $image_folder)) {
         try {
             $stmt = $conn->prepare("INSERT INTO `images` (image) VALUES (:image)");
