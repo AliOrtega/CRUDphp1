@@ -4,38 +4,26 @@ session_start();
 
 $id = $_GET['id'];
 
-if (isset($_POST['update'])) {
-    $new_name = $_POST['new_name'];
-    $query = "SELECT * FROM `images` WHERE id = $id";
-    $result = mysqli_query($conn, $query);
-    $row = mysqli_fetch_assoc($result);
+try {
+    $stmt = $conn->prepare("SELECT * FROM `images` WHERE id = :id");
+    $stmt->execute(['id' => $id]);
+    $row = $stmt->fetch(PDO::FETCH_ASSOC);
 
-    $old_name = $row['image'];
-    $old_path = 'uploaded_img/' . $old_name;
-    $new_path = 'uploaded_img/' . $new_name;
+    if ($row) {
+        $image_path = 'uploaded_img/' . $row['image'];
 
-    if (rename($old_path, $new_path)) {
-        $query = "UPDATE `images` SET image = '$new_name' WHERE id = $id";
-        mysqli_query($conn, $query) or die('query failed');
-        header('location:index.php');
+        if (unlink($image_path)) {
+            $stmt = $conn->prepare("DELETE FROM `images` WHERE id = :id");
+            $stmt->execute(['id' => $id]);
+            header('Location: gallery.php');
+            exit();
+        } else {
+            echo 'Error al borrar la imagen.';
+        }
     } else {
-        echo 'Error al renombrar la imagen.';
+        echo 'Imagen no encontrada.';
     }
+} catch (PDOException $e) {
+    die('Query failed: ' . $e->getMessage());
 }
 ?>
-
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Editar Imagen</title>
-</head>
-<body>
-    <form action="" method="post">
-        <input type="text" name="new_name" placeholder="Nuevo nombre de la imagen" required>
-        <input type="submit" name="update" value="Actualizar Imagen">
-    </form>
-</body>
-</html>

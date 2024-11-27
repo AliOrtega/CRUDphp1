@@ -13,6 +13,7 @@ try {
         PDO::ATTR_EMULATE_PREPARES => false,
     );
 
+    $conn->setAttribute(PDO::MYSQL_ATTR_MAX_BUFFER_SIZE, 1024 * 1024 * 10); // 10MB buffer
     $conn = new PDO($dsn, $username, $password, $options);
 } catch (PDOException $e) {
     die("Conexión fallida: " . $e->getMessage());

@@ -36,6 +36,11 @@ if (isset($_POST['update_profile'])) {
         $update_image_tmp_name = $_FILES['update_image']['tmp_name'];
         $update_image_folder = 'uploaded_img/'.$update_image;
 
+        // Crear el directorio si no existe con permisos correctos
+        if (!is_dir('uploaded_img')) {
+            mkdir('uploaded_img', 0755, true);
+        }
+
         if (!empty($update_image)) {
             if ($update_image_size > 2000000) {
                 $message[] = 'image is too large';

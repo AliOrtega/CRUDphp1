@@ -9,35 +9,30 @@ if(isset($_POST['submit'])){
     $email = htmlspecialchars($_POST['email']);
     $pass = md5($_POST['password']);
     $cpass = md5($_POST['cpassword']);
-    $image = $_FILES['image']['name'];
-    $image_size = $_FILES['image']['size'];
-    $image_tmp_name = $_FILES['image']['tmp_name'];
-    $image_folder = 'uploaded_img/'.$image;
+    $image = file_get_contents($_FILES['image']['tmp_name']);
 
     // Check if user already exists
     try {
         $stmt = $conn->prepare("SELECT * FROM `user_form` WHERE email = :email AND password = :password");
-        $stmt->execute(['email' => $email, 'password' => $pass]);
+        $stmt->execute([':email' => $email, ':password' => $pass]);
         if($stmt->rowCount() > 0){
             $message[] = 'User already exists'; 
         } else {
             if($pass != $cpass){
                 $message[] = 'Confirm password does not match!';
-            } elseif($image_size > 2000000){
-                $message[] = 'Image size is too large!';
             } else {
                 // Insert new user
                 $stmt = $conn->prepare("INSERT INTO `user_form` (name, email, password, image) VALUES (:name, :email, :password, :image)");
-                $insert = $stmt->execute(['name' => $name, 'email' => $email, 'password' => $pass, 'image' => $image]);
+                $stmt->bindParam(':name', $name);
+                $stmt->bindParam(':email', $email);
+                $stmt->bindParam(':password', $pass);
+                $stmt->bindParam(':image', $image, PDO::PARAM_LOB);
+                $insert = $stmt->execute();
 
                 if($insert){
-                    if(move_uploaded_file($image_tmp_name, $image_folder)){
-                        $message[] = 'Registered successfully!';
-                        header('Location: login.php');
-                        exit();
-                    } else {
-                        $message[] = 'Failed to upload image!';
-                    }
+                    $message[] = 'Registered successfully!';
+                    header('Location: login.php');
+                    exit();
                 } else {
                     $message[] = 'Registration failed!';
                 }
@@ -60,15 +55,14 @@ if(isset($_POST['submit'])){
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-   
-<div class="form-container">
 
+<div class="form-container">
     <form action="" method="post" enctype="multipart/form-data">
         <h3>Registrar ahora</h3>
         <?php
         if(isset($message)){
             foreach($message as $msg){
-                echo '<div class="message">'.$msg.'</div>';
+                echo '<div class="message">' . $msg . '</div>';
             }
         }
         ?>
@@ -80,7 +74,6 @@ if(isset($_POST['submit'])){
         <input type="submit" name="submit" value="Registrarme" class="btn">
         <p>¿Ya tienes una cuenta registrada? <a href="login.php">Ingresa con tu cuenta</a></p>
     </form>
-
 </div>
 
 </body>
