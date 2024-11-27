@@ -10,39 +10,46 @@ if(isset($_POST['submit'])){
     $pass = md5($_POST['password']);
     $cpass = md5($_POST['cpassword']);
     $image = file_get_contents($_FILES['image']['tmp_name']);
-
-    // Check if user already exists
-    try {
-        $stmt = $conn->prepare("SELECT * FROM `user_form` WHERE email = :email AND password = :password");
-        $stmt->execute([':email' => $email, ':password' => $pass]);
-        if($stmt->rowCount() > 0){
-            $message[] = 'User already exists'; 
-        } else {
-            if($pass != $cpass){
-                $message[] = 'Confirm password does not match!';
+    
+    // Verificar si el tipo de imagen es válido
+    $allowed_types = ['image/jpeg', 'image/png'];
+    $image_type = mime_content_type($_FILES['image']['tmp_name']);
+    
+    if (!in_array($image_type, $allowed_types)) {
+        $message[] = 'Tipo de imagen no válido. Solo se permiten JPEG y PNG.';
+    } else {
+        // Check if user already exists
+        try {
+            $stmt = $conn->prepare("SELECT * FROM `user_form` WHERE email = :email AND password = :password");
+            $stmt->execute([':email' => $email, ':password' => $pass]);
+            if($stmt->rowCount() > 0){
+                $message[] = 'El usuario ya existe'; 
             } else {
-                // Insert new user
-                $stmt = $conn->prepare("INSERT INTO `user_form` (name, email, password, image) VALUES (:name, :email, :password, :image)");
-                $stmt->bindParam(':name', $name);
-                $stmt->bindParam(':email', $email);
-                $stmt->bindParam(':password', $pass);
-                $stmt->bindParam(':image', $image, PDO::PARAM_LOB);
-                $insert = $stmt->execute();
-
-                if($insert){
-                    $message[] = 'Registered successfully!';
-                    header('Location: login.php');
-                    exit();
+                if($pass != $cpass){
+                    $message[] = '¡Las contraseñas no coinciden!';
                 } else {
-                    $message[] = 'Registration failed!';
+                    // Insert new user
+                    $stmt = $conn->prepare("INSERT INTO `user_form` (name, email, password, image) VALUES (:name, :email, :password, :image)");
+                    $stmt->bindParam(':name', $name);
+                    $stmt->bindParam(':email', $email);
+                    $stmt->bindParam(':password', $pass);
+                    $stmt->bindParam(':image', $image, PDO::PARAM_LOB);
+                    $insert = $stmt->execute();
+
+                    if($insert){
+                        $message[] = '¡Registrado exitosamente!';
+                        header('Location: login.php');
+                        exit();
+                    } else {
+                        $message[] = '¡Error en el registro!';
+                    }
                 }
             }
+        } catch (PDOException $e) {
+            die('Query failed: ' . $e->getMessage());
         }
-    } catch (PDOException $e) {
-        die('Query failed: ' . $e->getMessage());
     }
 }
-
 ?>
 
 <!DOCTYPE html>
@@ -62,7 +69,7 @@ if(isset($_POST['submit'])){
         <?php
         if(isset($message)){
             foreach($message as $msg){
-                echo '<div class="message">' . $msg . '</div>';
+                echo '<div class="message">' . htmlspecialchars($msg) . '</div>';
             }
         }
         ?>
