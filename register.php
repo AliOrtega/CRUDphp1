@@ -3,38 +3,44 @@
 include 'config.php';
 
 if(isset($_POST['submit'])){
-
-   $name = mysqli_real_escape_string($conn, $_POST['name']);
-   $email = mysqli_real_escape_string($conn, $_POST['email']);
-   $pass = mysqli_real_escape_string($conn, md5($_POST['password']));
-   $cpass = mysqli_real_escape_string($conn, md5($_POST['cpassword']));
+   // Sanitize input data
+   $name = htmlspecialchars($_POST['name']);
+   $email = htmlspecialchars($_POST['email']);
+   $pass = md5($_POST['password']);
+   $cpass = md5($_POST['cpassword']);
    $image = $_FILES['image']['name'];
    $image_size = $_FILES['image']['size'];
    $image_tmp_name = $_FILES['image']['tmp_name'];
    $image_folder = 'uploaded_img/'.$image;
 
-   $select = mysqli_query($conn, "SELECT * FROM `user_form` WHERE email = '$email' AND password = '$pass'") or die('query failed');
+   // Check if user already exists
+   try {
+       $stmt = $conn->prepare("SELECT * FROM `user_form` WHERE email = :email AND password = :password");
+       $stmt->execute(['email' => $email, 'password' => $pass]);
+       if($stmt->rowCount() > 0){
+          $message[] = 'User already exists'; 
+       }else{
+          if($pass != $cpass){
+             $message[] = 'Confirm password does not match!';
+          }elseif($image_size > 2000000){
+             $message[] = 'Image size is too large!';
+          }else{
+             // Insert new user
+             $stmt = $conn->prepare("INSERT INTO `user_form` (name, email, password, image) VALUES (:name, :email, :password, :image)");
+             $insert = $stmt->execute(['name' => $name, 'email' => $email, 'password' => $pass, 'image' => $image]);
 
-   if(mysqli_num_rows($select) > 0){
-      $message[] = 'user already exist'; 
-   }else{
-      if($pass != $cpass){
-         $message[] = 'confirm password not matched!';
-      }elseif($image_size > 2000000){
-         $message[] = 'image size is too large!';
-      }else{
-         $insert = mysqli_query($conn, "INSERT INTO `user_form`(name, email, password, image) VALUES('$name', '$email', '$pass', '$image')") or die('query failed');
-
-         if($insert){
-            move_uploaded_file($image_tmp_name, $image_folder);
-            $message[] = 'registered successfully!';
-            header('location:login.php');
-         }else{
-            $message[] = 'registeration failed!';
-         }
-      }
+             if($insert){
+                move_uploaded_file($image_tmp_name, $image_folder);
+                $message[] = 'Registered successfully!';
+                header('Location: login.php');
+             }else{
+                $message[] = 'Registration failed!';
+             }
+          }
+       }
+   } catch (PDOException $e) {
+       die('Query failed: ' . $e->getMessage());
    }
-
 }
 
 ?>
@@ -45,10 +51,8 @@ if(isset($_POST['submit'])){
    <meta charset="UTF-8">
    <meta http-equiv="X-UA-Compatible" content="IE=edge">
    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-   <title>register</title>
-
+   <title>Register</title>
    <link rel="stylesheet" href="css/style.css">
-
 </head>
 <body>
    
@@ -58,8 +62,8 @@ if(isset($_POST['submit'])){
       <h3>Registrar ahora</h3>
       <?php
       if(isset($message)){
-         foreach($message as $message){
-            echo '<div class="message">'.$message.'</div>';
+         foreach($message as $msg){
+            echo '<div class="message">'.$msg.'</div>';
          }
       }
       ?>
