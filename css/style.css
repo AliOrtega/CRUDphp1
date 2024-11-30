@@ -252,3 +252,11 @@
     height: 500px;
     object-fit: cover;
 }
+
+.tutorial-link {
+    color: var(--blue); 
+}
+
+.tutorial-link:hover {
+    text-decoration: underline;
+}

@@ -1,40 +1,11 @@
-<?php
-
-include 'config.php';
-session_start();
-
-if(isset($_POST['submit'])){
-    // Sanitize input data
-    $email = htmlspecialchars($_POST['email']);
-    $pass = md5($_POST['password']);
-
-    // Prepare and execute the query using PDO
-    try {
-        $stmt = $conn->prepare("SELECT * FROM `user_form` WHERE email = :email AND password = :password");
-        $stmt->execute(['email' => $email, 'password' => $pass]);
-
-        if($stmt->rowCount() > 0){
-            $row = $stmt->fetch(PDO::FETCH_ASSOC);
-            $_SESSION['user_id'] = $row['id'];
-            header('Location: home.php');
-            exit();
-        } else {
-            $message[] = 'incorrect email or password!';
-        }
-    } catch (PDOException $e) {
-        die('Query failed: ' . $e->getMessage());
-    }
-}
-
-?>
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
    <meta charset="UTF-8">
    <meta http-equiv="X-UA-Compatible" content="IE=edge">
    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-   <title>login</title>
+   <title>Bienvenido</title>
+   <p>Accede con tus datos o registrate</p>
    <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
@@ -54,6 +25,7 @@ if(isset($_POST['submit'])){
       <input type="password" name="password" placeholder="Contraseña" class="box" required>
       <input type="submit" name="submit" value="Ingresar" class="btn">
       <p>¿No tienes una cuenta? <a href="register.php">Registrate</a></p>
+      <p><a href="https://www.youtube.com/watch?v=6oV9sJdDv4E">Tutorial de cómo registrarse</a></p>
    </form>
 
 </div>
