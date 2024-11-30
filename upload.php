@@ -9,11 +9,11 @@ if (isset($_POST['submit'])) {
     $image_type = mime_content_type($image_temp);
 
     // Validar el tipo y tamaño de la imagen
-    $allowed_types = ['image/jpeg', 'image/png'];
+    $allowed_types = ['image/jpeg', 'image/png', 'image/gif', 'image/bmp', 'image/webp'];
     if (!in_array($image_type, $allowed_types)) {
-        echo 'Tipo de archivo no válido. Solo se permiten imágenes JPEG y PNG.';
-    } elseif ($image_size > 2000000) {
-        echo 'El tamaño de la imagen es demasiado grande. Máximo 2MB.';
+        echo 'Tipo de archivo no válido. Solo se permiten imágenes JPEG, PNG, GIF, BMP y WEBP.';
+    } elseif ($image_size > 5000000) { // Limitar a 5MB
+        echo 'El tamaño de la imagen es demasiado grande. Máximo 5MB.';
     } else {
         $image_data = file_get_contents($image_temp);
 
@@ -44,7 +44,7 @@ if (isset($_POST['submit'])) {
 <body>
     <h1>Subir Imagen</h1>
     <form action="" method="post" enctype="multipart/form-data">
-        <input type="file" name="image" accept="image/jpg, image/jpeg, image/png" required>
+        <input type="file" name="image" accept="image/*" required> <!-- Permitir todos los formatos de imagen -->
         <input type="submit" name="submit" value="Subir Imagen">
         <a href="gallery.php" class="btn">Regresar a la Galería</a>
     </form>
